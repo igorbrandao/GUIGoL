@@ -10,6 +10,7 @@ class GameExec implements Runnable {
     private int initMode;
     private int generationNumber;
     private long iterationDelay = 550;
+    final Object monitor = new Object();
     private final Cell[][] nextGrid = new Cell[25][25];
     private final Cell[][] currentGrid = new Cell[25][25];
 
@@ -29,96 +30,78 @@ class GameExec implements Runnable {
         this.iterationDelay -= 225;
     }
 
-    void setInitMode(int initMode) {
-        this.initMode = initMode;
-    }
-
     Cell[][] getCurrentGrid() {
         return this.currentGrid;
     }
 
-    private void resetGame() {
-        this.generationNumber = 0;
+    GameExec(int initMode) {
         this.initMode = 0;
+        this.initMode = initMode;
+        this.generationNumber = 0;
+        for (int i = 0; i < this.currentGrid.length; ++i) {
+            for (int j = 0; j < this.currentGrid.length; ++j) {
+                this.currentGrid[i][j] = new Cell();
+            }
+        }
     }
 
     @Override
     @SuppressWarnings("SleepWhileInLoop")
     public void run() {
 
-        for (int i = 0; i < this.currentGrid.length; ++i) {
-            for (int j = 0; j < this.currentGrid.length; ++j) {
-                this.currentGrid[i][j] = new Cell();
-            }
+        if (this.initMode == 1) {
+            this.DefaultInitialize();
         }
 
-        this.resetGame();
+        if (this.initMode == 2) {
+            this.RandomInitialize();
+        }
 
         while (GameGUI.isRunning()) {
 
-            while (GameGUI.isChoosing()) {
-
-                if (this.initMode == 1) {
-                    this.DefaultInitialize();
-                    GameGUI.playing();
-                }
-
-                if (this.initMode == 2) {
-                    this.RandomInitialize();
-                    GameGUI.playing();
-                }
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(GameExec.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-
-            while (GameGUI.isPaused()) {
-                if (!GameGUI.isPaused()) {
-                }
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(GameExec.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-
-            if (!GameGUI.isChoosing()) {
-
-                for (int i = 0; i < this.currentGrid.length; ++i) {
-                    for (int j = 0; j < this.currentGrid.length; ++j) {
-                        this.scanNeighbourhood(i, j);
+            synchronized (monitor) {
+                while (GameGUI.isPaused()) {
+                    try {
+                        monitor.wait();
+                    } catch (InterruptedException ignored) {
                     }
                 }
+            }
 
-                this.Evolution();
-                this.Transfer();
-                this.generationNumber++;
-
-                if (this.iterationDelay == 100) {
-                    new Sound("gameFiles/sound/gen4.wav").play();
-                }
-                if (this.iterationDelay == 325) {
-                    new Sound("gameFiles/sound/gen3.wav").play();
-                }
-                if (this.iterationDelay == 550) {
-                    new Sound("gameFiles/sound/gen2.wav").play();
-                }
-                if (this.iterationDelay == 775) {
-                    new Sound("gameFiles/sound/gen1.wav").play();
-                }
-                if (this.iterationDelay == 1000) {
-                    new Sound("gameFiles/sound/gen0.wav").play();
-                }
-
-                try {
-                    Thread.sleep(this.iterationDelay);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(GameExec.class.getName()).log(Level.SEVERE, null, ex);
+            for (int i = 0; i < this.currentGrid.length; ++i) {
+                for (int j = 0; j < this.currentGrid.length; ++j) {
+                    this.scanNeighbourhood(i, j);
                 }
             }
+
+            this.Evolution();
+            this.Transfer();
+            this.generationNumber++;
+
+            if (this.iterationDelay == 100) {
+                new Sound("gameFiles/sound/gen4.wav").play();
+            }
+            if (this.iterationDelay == 325) {
+                new Sound("gameFiles/sound/gen3.wav").play();
+            }
+            if (this.iterationDelay == 550) {
+                new Sound("gameFiles/sound/gen2.wav").play();
+            }
+            if (this.iterationDelay == 775) {
+                new Sound("gameFiles/sound/gen1.wav").play();
+            }
+            if (this.iterationDelay == 1000) {
+                new Sound("gameFiles/sound/gen0.wav").play();
+            }
+
+            try {
+                Thread.sleep(this.iterationDelay);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(GameExec.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
         }
+
     }
 
     private void DefaultInitialize() {

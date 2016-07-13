@@ -4,6 +4,7 @@ import gameObjects.*;
 import java.awt.Color;
 import java.awt.Font;
 import javax.swing.JFrame;
+
 import jplay.GameImage;
 import jplay.Mouse;
 import jplay.Sound;
@@ -11,6 +12,8 @@ import jplay.Window;
 
 public class GameGUI {
 
+    private Thread thread;
+    private GameExec game;
     private static boolean run;
     private static boolean stop;
     private static boolean choosing;
@@ -47,7 +50,10 @@ public class GameGUI {
     }
 
     private void unpauseGame() {
-        stop = false;
+        synchronized (game.monitor) {
+            stop = false;
+            game.monitor.notify();
+        }
     }
 
     static boolean isPaused() {
@@ -58,16 +64,16 @@ public class GameGUI {
         choosing = true;
     }
 
-    static void playing() {
+    private void playing() {
         choosing = false;
     }
 
-    static boolean isChoosing() {
+    private boolean isChoosing() {
         return choosing;
     }
 
     @SuppressWarnings("SleepWhileInLoop")
-    public void begin() throws InterruptedException {
+    public synchronized void begin() throws InterruptedException {
 
         int xAxis, yAxis = 0;
         this.window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -103,9 +109,6 @@ public class GameGUI {
         this.launch();
         this.choosing();
         boolean restarting = false;
-        GameExec game = new GameExec();
-        Thread thread = new Thread(game);
-        thread.start();
 
         while (isRunning()) {
 
@@ -152,7 +155,10 @@ public class GameGUI {
                     this.menuSound_Highlight(this.defaultInit);
                     if (this.mouse.isLeftButtonPressed()) {
                         this.menuSound_Select();
-                        game.setInitMode(1);
+                        game = new GameExec(1);
+                        thread = new Thread(game);
+                        thread.start();
+                        this.playing();
                     }
                 }
                 if (this.randomInit.state(this.mouse)) {
@@ -160,7 +166,10 @@ public class GameGUI {
                     this.menuSound_Highlight(this.randomInit);
                     if (this.mouse.isLeftButtonPressed()) {
                         this.menuSound_Select();
-                        game.setInitMode(2);
+                        game = new GameExec(2);
+                        thread = new Thread(game);
+                        thread.start();
+                        this.playing();
                     }
                 }
                 if (this.exit.state(this.mouse)) {
@@ -168,7 +177,7 @@ public class GameGUI {
                     this.menuSound_Highlight(this.exit);
                     if (this.mouse.isLeftButtonPressed()) {
                         this.menuSound_Select();
-                        playing();
+                        this.playing();
                         this.end();
                         Thread.sleep(500);
                     }
