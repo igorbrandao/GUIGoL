@@ -11,7 +11,6 @@ import jplay.Window;
 
 public class GameGUI {
 
-    private boolean restarting;
     private static boolean run;
     private static boolean stop;
     private static boolean choosing;
@@ -30,42 +29,40 @@ public class GameGUI {
     private final Font font2 = new Font(Font.MONOSPACED, Font.ITALIC, 20);
     private final Window window = new Window(800, 600);
     private final Mouse mouse = window.getMouse();
-    private GameExec game;
-    private Thread thread;
 
-    public void start() {
+    private void launch() {
         run = true;
     }
 
-    public void end() {
+    private void end() {
         run = false;
     }
 
-    public static boolean isRunning() {
+    static boolean isRunning() {
         return run;
     }
 
-    public void pauseGame() {
+    private void pauseGame() {
         stop = true;
     }
 
-    public void unpauseGame() {
+    private void unpauseGame() {
         stop = false;
     }
 
-    public static boolean isPaused() {
+    static boolean isPaused() {
         return stop;
     }
-    
-    public void choosing() {
+
+    private void choosing() {
         choosing = true;
     }
 
-    public static void playing() {
+    static void playing() {
         choosing = false;
     }
 
-    public static boolean isChoosing() {
+    static boolean isChoosing() {
         return choosing;
     }
 
@@ -103,12 +100,12 @@ public class GameGUI {
             yAxis += 20;
         }
 
+        this.launch();
         this.choosing();
-        this.restarting = false;
-        this.game = new GameExec();
-        this.start();
-        this.thread = new Thread(this.game);
-        this.thread.start();
+        boolean restarting = false;
+        GameExec game = new GameExec();
+        Thread thread = new Thread(game);
+        thread.start();
 
         while (isRunning()) {
 
@@ -155,7 +152,7 @@ public class GameGUI {
                     this.menuSound_Highlight(this.defaultInit);
                     if (this.mouse.isLeftButtonPressed()) {
                         this.menuSound_Select();
-                        this.game.setInitMode(1);
+                        game.setInitMode(1);
                     }
                 }
                 if (this.randomInit.state(this.mouse)) {
@@ -163,7 +160,7 @@ public class GameGUI {
                     this.menuSound_Highlight(this.randomInit);
                     if (this.mouse.isLeftButtonPressed()) {
                         this.menuSound_Select();
-                        this.game.setInitMode(2);
+                        game.setInitMode(2);
                     }
                 }
                 if (this.exit.state(this.mouse)) {
@@ -193,12 +190,14 @@ public class GameGUI {
             this.hideButton(this.defaultInit);
             this.showButton(this.restart);
 
-            if (this.mouse.isOverArea(0, 0, 20 * this.printGrid.length, 20 * this.printGrid.length) && this.mouse.isLeftButtonPressed()) {
-                this.userManualGridEdit(this.game.getCurrentGrid(), this.mouse);
+            if (this.mouse.isOverArea(0, 0, 20 * this.printGrid.length, 20 * this.printGrid.length)
+                    && this.mouse.isLeftButtonPressed()) {
+                this.userManualGridEdit(game.getCurrentGrid(), this.mouse);
             }
 
             if (this.pause.state(this.mouse)) {
-                this.window.drawText("Pause the Evolution on the Current Generation", 10, 20 * this.printGrid.length + 15, Color.BLACK, this.font);
+                this.window.drawText("Pause the Evolution on the Current Generation",
+                        10, 20 * this.printGrid.length + 15, Color.BLACK, this.font);
                 this.menuSound_Highlight(this.pause);
                 if (this.mouse.isLeftButtonPressed()) {
                     this.menuSound_Select();
@@ -223,14 +222,17 @@ public class GameGUI {
                         this.restart.draw();
                         this.exit.draw();
 
-                        this.window.drawText("Passed Generations: " + this.game.getGen(), 10, this.window.getHeight() - 30, Color.BLACK, this.font);
+                        this.window.drawText("Passed Generations: " + game.getGen(),
+                                10, this.window.getHeight() - 30, Color.BLACK, this.font);
 
-                        if (mouse.isOverArea(0, 0, (int) 20 * this.printGrid.length, 20 * this.printGrid.length) && mouse.isLeftButtonPressed()) {
-                            this.userManualGridEdit(this.game.getCurrentGrid(), this.mouse);
+                        if (mouse.isOverArea(0, 0, 20 * this.printGrid.length, 20 * this.printGrid.length)
+                                && mouse.isLeftButtonPressed()) {
+                            this.userManualGridEdit(game.getCurrentGrid(), this.mouse);
                         }
-                        this.printGrid(this.game.getCurrentGrid(), this.printGrid);
+                        this.printGrid(game.getCurrentGrid(), this.printGrid);
                         if (this.play.state(this.mouse)) {
-                            this.window.drawText("Resume the Evolutionary Process", 10, 20 * this.printGrid.length + 15, Color.BLACK, this.font);
+                            this.window.drawText("Resume the Evolutionary Process",
+                                    10, 20 * this.printGrid.length + 15, Color.BLACK, this.font);
                             this.menuSound_Highlight(this.play);
                             if (this.mouse.isLeftButtonPressed()) {
                                 this.menuSound_Select();
@@ -238,14 +240,15 @@ public class GameGUI {
                             }
                         }
                         if (this.restart.state(this.mouse)) {
-                            this.window.drawText("Restart the Game", 10, 20 * this.printGrid.length + 15, Color.BLACK, this.font);
+                            this.window.drawText("Restart the Game",
+                                    10, 20 * this.printGrid.length + 15, Color.BLACK, this.font);
                             this.menuSound_Highlight(this.restart);
                             if (this.mouse.isLeftButtonPressed()) {
                                 this.menuSound_Select();
-                                this.restarting = true;
+                                restarting = true;
                                 this.unpauseGame();
                                 this.end();
-                                this.thread.join();
+                                thread.join();
                             }
                         }
                         if (this.exit.state(this.mouse)) {
@@ -272,9 +275,9 @@ public class GameGUI {
                 this.window.drawText("Faster Evolution Rate", 10, 20 * this.printGrid.length + 15, Color.BLACK, this.font);
                 this.menuSound_Highlight(this.speedUp);
                 if (this.mouse.isLeftButtonPressed()) {
-                    if (this.game.getDelay() > 100) {
+                    if (game.getDelay() > 100) {
                         this.menuSound_Select();
-                        this.game.lowerDelay();
+                        game.lowerDelay();
                     } else {
                         this.menuSound_Deselect();
                     }
@@ -285,9 +288,9 @@ public class GameGUI {
                 this.window.drawText("Slower Evolution Rate", 10, 20 * this.printGrid.length + 15, Color.BLACK, this.font);
                 this.menuSound_Highlight(this.speedDown);
                 if (this.mouse.isLeftButtonPressed()) {
-                    if (this.game.getDelay() < 1000) {
+                    if (game.getDelay() < 1000) {
                         this.menuSound_Select();
-                        this.game.raiseDelay();
+                        game.raiseDelay();
                     } else {
                         this.menuSound_Deselect();
                     }
@@ -299,9 +302,9 @@ public class GameGUI {
                 this.menuSound_Highlight(this.restart);
                 if (this.mouse.isLeftButtonPressed()) {
                     this.menuSound_Select();
-                    this.restarting = true;
+                    restarting = true;
                     this.end();
-                    this.thread.join();
+                    thread.join();
                 }
             }
 
@@ -321,10 +324,11 @@ public class GameGUI {
 
             if (isRunning()) {
 
-                printGrid(this.game.getCurrentGrid(), this.printGrid);
+                printGrid(game.getCurrentGrid(), this.printGrid);
 
-                this.window.drawText("Passed Generations: " + this.game.getGen(), 10, this.window.getHeight() - 30, Color.BLACK, this.font);
-                this.window.drawText("Speed: " + this.game.getDelay() + " ms" + " (" + game.getDelay() / 1000 + " second)",
+                this.window.drawText("Passed Generations: " + game.getGen(),
+                        10, this.window.getHeight() - 30, Color.BLACK, this.font);
+                this.window.drawText("Speed: " + game.getDelay() + " ms" + " (" + game.getDelay() / 1000 + " second)",
                         10, this.window.getHeight() - 10, Color.BLACK, this.font);
 
             }
@@ -333,40 +337,40 @@ public class GameGUI {
             this.window.delay(10);
 
         }
-        if (this.restarting) {
+        if (restarting) {
             this.begin();
         } else {
             this.window.exit();
         }
     }
 
-    public void showButton(Button button) {
+    private void showButton(Button button) {
 
         button.unhide();
         button.setOnScreen(true);
 
     }
 
-    public void hideButton(Button button) {
+    private void hideButton(Button button) {
 
         button.hide();
         button.setOnScreen(false);
 
     }
 
-    public void menuSound_Select() {
+    private void menuSound_Select() {
 
         new Sound("gameFiles/sound/select.wav").play();
 
     }
 
-    public void menuSound_Deselect() {
+    private void menuSound_Deselect() {
 
         new Sound("gameFiles/sound/deselect.wav").play();
 
     }
 
-    public void menuSound_Highlight(Button button) {
+    private void menuSound_Highlight(Button button) {
 
         if (!this.sound.isExecuting() && !button.hasPlayed()) {
             this.sound.load("gameFiles/sound/highlight.wav");
@@ -375,19 +379,7 @@ public class GameGUI {
         }
     }
 
-    public void gameSound_setAlive() {
-
-        new Sound("gameFiles/sound/setAlive.wav").play();
-
-    }
-
-    public void gameSound_setDead() {
-
-        new Sound("gameFiles/sound/setDead.wav").play();
-
-    }
-
-    public void printGrid(Cell[][] currentGrid, CellModel[][] printGrid) {
+    private void printGrid(Cell[][] currentGrid, CellModel[][] printGrid) {
 
         for (int i = 0; i < printGrid.length; ++i) {
             for (int j = 0; j < printGrid.length; ++j) {
@@ -397,7 +389,7 @@ public class GameGUI {
         }
     }
 
-    public int[] getCoordinates(Mouse mouse) {
+    private int[] getCoordinates(Mouse mouse) {
 
         int[] coordinates = new int[2];
 
@@ -407,23 +399,25 @@ public class GameGUI {
         return coordinates;
     }
 
-    public void userManualGridEdit(Cell[][] currentGrid, Mouse mouse) {
+    private void userManualGridEdit(Cell[][] currentGrid, Mouse mouse) {
 
         int[] coordinates = getCoordinates(mouse);
 
         if (currentGrid[coordinates[0]][coordinates[1]].isAlive()) {
-            gameSound_setDead();
+            new Sound("gameFiles/sound/setDead.wav").play();
             currentGrid[coordinates[0]][coordinates[1]].setDead();
         } else {
-            gameSound_setAlive();
+            new Sound("gameFiles/sound/setAlive.wav").play();
             currentGrid[coordinates[0]][coordinates[1]].setAlive();
         }
     }
 
-    public boolean invalidMouseArea(Mouse mouse) {
+    private boolean invalidMouseArea(Mouse mouse) {
 
         return mouse.isOverArea(0, 0, 800, 600)
-                && (isChoosing() || (!isChoosing() && !mouse.isOverArea(0, 0, 20 * this.printGrid.length, 20 * this.printGrid.length)))
+                && (isChoosing()
+                || (!isChoosing()
+                && !mouse.isOverArea(0, 0, 20 * this.printGrid.length, 20 * this.printGrid.length)))
                 && !this.play.state(mouse)
                 && !this.pause.state(mouse)
                 && !this.speedUp.state(mouse)

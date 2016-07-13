@@ -13,10 +13,6 @@ public class Button extends Sprite {
         setCurrFrame(0);
     }
 
-    public boolean isOnScreen() {
-        return visibleOnScreen;
-    }
-
     public void setOnScreen(boolean onScreen) {
         this.visibleOnScreen = onScreen;
     }

@@ -5,7 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jplay.Sound;
 
-public class GameExec implements Runnable {
+class GameExec implements Runnable {
 
     private int initMode;
     private int generationNumber;
@@ -13,31 +13,31 @@ public class GameExec implements Runnable {
     private final Cell[][] nextGrid = new Cell[25][25];
     private final Cell[][] currentGrid = new Cell[25][25];
 
-    public int getGen() {
+    int getGen() {
         return this.generationNumber;
     }
 
-    public float getDelay() {
+    float getDelay() {
         return this.iterationDelay;
     }
 
-    public void raiseDelay() {
+    void raiseDelay() {
         this.iterationDelay += 225;
     }
 
-    public void lowerDelay() {
+    void lowerDelay() {
         this.iterationDelay -= 225;
     }
 
-    public void setInitMode(int initMode) {
+    void setInitMode(int initMode) {
         this.initMode = initMode;
     }
 
-    public Cell[][] getCurrentGrid() {
+    Cell[][] getCurrentGrid() {
         return this.currentGrid;
     }
 
-    public void resetGame() {
+    private void resetGame() {
         this.generationNumber = 0;
         this.initMode = 0;
     }
@@ -121,7 +121,7 @@ public class GameExec implements Runnable {
         }
     }
 
-    public void DefaultInitialize() {
+    private void DefaultInitialize() {
 
         for (int i = 0; i < this.currentGrid.length; ++i) {
             for (int j = 0; j < this.currentGrid.length; ++j) {
@@ -134,22 +134,22 @@ public class GameExec implements Runnable {
         }
     }
 
-    public void RandomInitialize() {
+    private void RandomInitialize() {
 
         java.util.Random rand = new java.util.Random();
 
-        for (int i = 0; i < this.currentGrid.length; ++i) {
+        for (Cell[] currentGridRow : this.currentGrid) {
             for (int j = 0; j < this.currentGrid.length; ++j) {
                 if (rand.nextBoolean()) {
-                    this.currentGrid[i][j].setAlive();
+                    currentGridRow[j].setAlive();
                 } else {
-                    this.currentGrid[i][j].setDead();
+                    currentGridRow[j].setDead();
                 }
             }
         }
     }
 
-    public void scanNeighbourhood(int i, int j) {
+    private void scanNeighbourhood(int i, int j) {
 
         int counter = 0;
         boolean[] vet = new boolean[8];
@@ -187,27 +187,28 @@ public class GameExec implements Runnable {
         this.currentGrid[i][j].setNeighbourhood(counter);
     }
 
-    public boolean Undercrowd(int i, int j) {
+    private boolean Undercrowd(int i, int j) {
 
         return this.currentGrid[i][j].getNeighbourhood() < 2;
     }
 
-    public boolean Overcrowd(int i, int j) {
+    private boolean Overcrowd(int i, int j) {
 
         return this.currentGrid[i][j].getNeighbourhood() > 3;
     }
 
-    public boolean Survival(int i, int j) {
+    private boolean Survival(int i, int j) {
 
-        return (this.currentGrid[i][j].getNeighbourhood() == 2 || this.currentGrid[i][j].getNeighbourhood() == 3) && currentGrid[i][j].isAlive();
+        return (this.currentGrid[i][j].getNeighbourhood() == 2 || this.currentGrid[i][j].getNeighbourhood() == 3)
+                && currentGrid[i][j].isAlive();
     }
 
-    public boolean Birth(int i, int j) {
+    private boolean Birth(int i, int j) {
 
         return this.currentGrid[i][j].getNeighbourhood() == 3 && !this.currentGrid[i][j].isAlive();
     }
 
-    public void Evolution() {
+    private void Evolution() {
 
         for (int i = 0; i < this.currentGrid.length; ++i) {
             for (int j = 0; j < this.currentGrid.length; j++) {
@@ -225,7 +226,7 @@ public class GameExec implements Runnable {
         }
     }
 
-    public void Transfer() {
+    private void Transfer() {
 
         for (int i = 0; i < this.currentGrid.length; ++i) {
             for (int j = 0; j < this.currentGrid.length; ++j) {
